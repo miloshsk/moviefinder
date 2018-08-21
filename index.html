@@ -10,9 +10,15 @@
    <div class="wrapper">
       <form class="movies-search">
          <label for="search">Search movie</label>
-         <input type="text" class="movies-search-field">
-         <button class="btn-search">Search</button>
+         <input type="text" class="movies-search-field" id="search">
+         <button class="btn btn-search">Search</button>
       </form>
+         <div class="sort-item">
+            <label for="sort-name">Sort by name</label>
+            <input type="radio" name="sort" id="sort-name" class="movie-sort">
+            <label for="sort-year">Sort by year</label>
+            <input type="radio" name="sort" id="sort-year" class="movie-sort">
+         </div>
       <ul class="movies-list">
       </ul>
    </div>
