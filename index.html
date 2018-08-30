@@ -8,11 +8,14 @@
 </head>
 <body>
    <div class="wrapper">
-      <form class="movies-search">
-         <label for="search">Search movie</label>
-         <input type="text" class="movies-search-field" id="search">
-         <button class="btn btn-search">Search</button>
-      </form>
+      <div class="profile-line">
+         <form class="movies-search">
+            <label for="search">Search movie</label>
+            <input type="text" class="movies-search-field" id="search">
+            <button class="btn btn-search">Search</button>
+         </form>
+         <a href="#" class="btn favorites">Watch favorites</a>
+      </div>
          <div class="sort-item">
             <label for="sort-name">Sort by name</label>
             <input type="radio" name="sort" id="sort-name" class="movie-sort">
@@ -21,6 +24,7 @@
          </div>
       <ul class="movies-list">
       </ul>
+      <ul class="favorites-list"></ul>
    </div>
    <script src="js/main.js"></script>
 </body>
