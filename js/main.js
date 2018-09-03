@@ -12,13 +12,16 @@ const MovieCtrl = (function() {
 				xhr.onload = function() {
 					if(xhr.status === 200) {
 						let json = JSON.parse(xhr.responseText);
-				// Rewrite movies arr
+		// Rewrite data movies array
 						data.movies = json.Search;
+		// Create elements from data movies array
 						resolve(data.movies);
 					} else {
-						reject();
+		// Show error message
+						reject(error);
 					}
 				};
+		// Show error message
 				xhr.onerror = function(error) {
 					reject(error);
 				}
@@ -54,15 +57,16 @@ const UICtrl = (function() {
 		movieItemPoster: 'movie-item-poster',
 		moviesItesInfo: 'movie-item-info',
 		addFavoritesBtn: 'favorite-btn',
-		movieItem: 'movie-item',
-		favoriteBtnText: 'Add to favorites',
 		removeFromFavoriteBtn: 'remove-btn',
-		removeFromFavoriteText: 'Remove from favorite',
+		movieItem: 'movie-item',
+		watchFavoritesBtn: 'favorites',
+		watchSearchResultBtn: 'search result',
+		favoriteBtnText: 'Favorites',
 		goToImbdText: 'Go to IMBD',
 		goToImbdHref: 'https://www.imdb.com/title/'
 	}
 	return {
-		createMovieItem(movie, parentElem) {
+		createMovieItem(movie, parentElem, buttonClassName) {
 			const movieItem =document.createElement('li');
 			movieItem.classList.add(UIstringList.movieItem);
 			movieItem.dataset.title = `${movie.Title}`;
@@ -81,14 +85,9 @@ const UICtrl = (function() {
 			infoWrapper.classList.add(UIstringList.moviesItesInfo);
 
 			const favoriteBtn = document.createElement('button');
-			favoriteBtn.classList.add(UIstringList.addFavoritesBtn);
+			favoriteBtn.classList.add(...buttonClassName);
 			favoriteBtn.appendChild(document.createTextNode(UIstringList.favoriteBtnText));
 			infoWrapper.appendChild(favoriteBtn);
-
-			const removeFromFavoriteBtn = document.createElement('button');
-			removeFromFavoriteBtn.classList.add(UIstringList.removeFromFavoriteBtn);
-			removeFromFavoriteBtn.appendChild(document.createTextNode(UIstringList.removeFromFavoriteText));
-			infoWrapper.appendChild(removeFromFavoriteBtn);
 
 			const title = document.createElement('h2');
 			title.appendChild(document.createTextNode(movie.Title));
@@ -153,9 +152,11 @@ const UICtrl = (function() {
 			if(this.classList.contains('favorites-show')) {
 				document.querySelector(UISelectors.movieList).style.display = 'none';
 				document.querySelector(UISelectors.favoritesList).style.display = 'flex';
+				this.textContent = UIstringList.watchSearchResultBtn;
 			} else {
 				document.querySelector(UISelectors.movieList).style.display = 'flex';
 				document.querySelector(UISelectors.favoritesList).style.display = 'none';
+				this.textContent = UIstringList.watchFavoritesBtn;
 			}
 		}
 	}
@@ -170,9 +171,9 @@ const App = (function(MovieCtrl, UICtrl) {
 		//Event on form submit
 		document.querySelector(UISelectors.movieSearchForm).addEventListener('submit', function(e) {
 			e.preventDefault();
+			const url = `${MovieCtrl.getUrl()}${UICtrl.getMovieSearchValue()}`;
 		// Clear movies list
 			UICtrl.clearMoviesList(document.querySelector(UISelectors.movieList));
-			const url = `${MovieCtrl.getUrl()}${UICtrl.getMovieSearchValue()}`;
 			MovieCtrl.getDataFromApi(url)
 		// Create element inside list of movies
 				.then(createMoviesList)
@@ -189,21 +190,22 @@ const App = (function(MovieCtrl, UICtrl) {
 
 		document.querySelector(UISelectors.showFavoritesBtn).addEventListener('click',UICtrl.toggleFavoritesList);
 
-		document.querySelector(UISelectors.wrapper).addEventListener('click', addFavotiteMovie);
-
-		document.querySelector(UISelectors.wrapper).addEventListener('click', removeFromFavorites);
+		document.querySelector(UISelectors.wrapper).addEventListener('click', toggleFavotiteMovie);
 
 	}
 
 	const createMoviesList = function(movies) {
+		let name = ['favorite-btn'];
 		movies.forEach(function(movie){
-			UICtrl.createMovieItem(movie, UISelectors.movieList);
+			UICtrl.createMovieItem(movie, UISelectors.movieList, name);
 	})}
 	const createFavoriteList = function(movies) {
+		let name = ['favorite-btn', 'remove-btn'];
 		movies.forEach(function(movie){
-			UICtrl.createMovieItem(movie, UISelectors.favoritesList);
-	})}
-	const addFavotiteMovie = function(e) {
+			UICtrl.createMovieItem(movie, UISelectors.favoritesList, name);
+	});
+	}
+	const toggleFavotiteMovie = function(e) {
 		// Get list of movies
 		const moviesList = MovieCtrl.getDataMovies();
 		//Get list of favorite movies
@@ -213,8 +215,25 @@ const App = (function(MovieCtrl, UICtrl) {
 		const checkMovieRepeat = function(item) {
 			return item.Title === movieTitle;
 		}
+
 		// Check click target
 		if(e.target.classList.contains(UIstringList.addFavoritesBtn)) {
+		// Check if target contains remove class name
+			if(e.target.classList.contains(UIstringList.removeFromFavoriteBtn)) {
+		// Set movieTitle from data-title
+				movieTitle = e.target.closest(UISelectors.movieItem).dataset.title;
+		// Go through favorite movies list
+				favoriteMovies.forEach( function(item, i) {
+		// Check if target title equal to favorite item title
+					if(movieTitle === item.Title) {
+		// Remove favorite item title
+						favoriteMovies.splice(i, 1);
+					}
+		// Remove element from DOM
+					e.target.closest(UISelectors.movieItem).remove();
+				});
+			} else {
+		// If target don't contains remove class name
 				movieTitle = e.target.closest(UISelectors.movieItem).dataset.title;
 		// Go through list of movies
 				moviesList.forEach( function(item) {
@@ -222,32 +241,13 @@ const App = (function(MovieCtrl, UICtrl) {
 					if(item.Title === movieTitle && !favoriteMovies.some(checkMovieRepeat)) {
 		// Push item in favorites
 						favoriteMovies.push(item);
+		// Clear and recreate elements including new favorite item
+						UICtrl.clearMoviesList(document.querySelector(UISelectors.favoritesList));
+						createFavoriteList(favoriteMovies);
 					}
 				});
-			} else {
-				return false;
-			}
-			UICtrl.clearMoviesList(document.querySelector(UISelectors.favoritesList));
-			createFavoriteList(favoriteMovies);
-	}
-
-	const removeFromFavorites = function(e) {
-		// Get list of movies
-		const moviesList = MovieCtrl.getDataMovies();
-		//Get list of favorite movies
-		const favoriteMovies = MovieCtrl.getDataFavorites();
-		//Get title of clicked item
-		let movieTitle;
-		if(e.target.classList.contains(UIstringList.removeFromFavoriteBtn)) {
-			let movieTitle = e.target.closest(UISelectors.movieItem).dataset.title;
-			favoriteMovies.forEach( function(item, i) {
-				if(movieTitle === item.Title) {
-					favoriteMovies.splice(i, 1);
-				}
-			});
-		}
-		UICtrl.clearMoviesList(document.querySelector(UISelectors.favoritesList));
-		createFavoriteList(favoriteMovies);
+			} 
+		} 
 	}	
 
 	return {
