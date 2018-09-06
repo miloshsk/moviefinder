@@ -1,6 +1,6 @@
 const MovieCtrl = (function() {
 	const data = {
-		url: 'http://www.omdbapi.com/?apikey=e99e23f5&s=',
+		url: 'https://www.omdbapi.com/?apikey=e99e23f5&s=',
 		movies: [],
 		favorites: [],
 		titleSize: 36
