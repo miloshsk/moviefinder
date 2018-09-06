@@ -36,12 +36,12 @@ const MovieCtrl = (function() {
 })();
 const UICtrl = (function() {
 	const UISelectors = {
-		errorMessage: '.error-message',
+		errorMessage: '.message-error',
 		favoritesList: '.favorites-list',
 		movieList: '.movies-list',
 		movieSearchForm: '.movies-search',
 		movieSearchInput: '.movies-search-field',
-		movieItemWrapper: '.movie-item-wrapper',
+		movieItem: '.movie-item',
 		moviesSearchlabel: '.movies-search-label',
 		sortByNameInput: '#sort-name',
 		sortByYearInput: '#sort-year',
@@ -50,20 +50,20 @@ const UICtrl = (function() {
 		wrapper: '.wrapper'
 	}
 	const UIstringList = {
-		addFavoritesBtn: 'favorite-btn',
+		addFavoritesBtn: 'favorite-btn-add',
 		errorMessage: 'Already in list',
-		errorMessageClassName: 'error-message',
+		errorMessageClassName: 'message-error',
 		favoriteBtnText: 'Favorites',
 		goToImbdHref: 'https://www.imdb.com/title/',
-		linkToImbdText: 'Go to IMBD',
-		movieItemWrapper: 'movie-item-wrapper',
+		linkToImbdText: 'IMBD',
 		movieItem: 'movie-item',
 		moviesSearchLabelActive: 'movies-search-label-active',
 		movieItemPoster: 'movie-item-poster',
 		moviesItesInfo: 'movie-item-info',
-		removeFromFavoriteBtn: 'remove-btn',
+		removeFromFavoriteBtn: 'favorite-btn-remove',
 		watchFavoritesBtn: 'favorites',
 		watchSearchResultBtnText: 'search result'
+
 	}
 	return {
 		blurSearchInput() {
@@ -83,15 +83,11 @@ const UICtrl = (function() {
 			}
 		},
 		createMovieItem(movie, parentElem, buttonClassName, titleSize) {
-			const movieItemWrapper =document.createElement('li');
-			movieItemWrapper.classList.add(UIstringList.movieItemWrapper);
-			movieItemWrapper.dataset.title = `${movie.Title}`;
-			movieItemWrapper.dataset.year = `${movie.Year.substr(0,4)}`;
-			document.querySelector(parentElem).appendChild(movieItemWrapper);
-
-			const movieItem = document.createElement('div');
+			const movieItem =document.createElement('li');
 			movieItem.classList.add(UIstringList.movieItem);
-			movieItemWrapper.appendChild(movieItem);
+			movieItem.dataset.title = `${movie.Title}`;
+			movieItem.dataset.year = `${movie.Year.substr(0,4)}`;
+			document.querySelector(parentElem).appendChild(movieItem);
 
 			const imgWrapper = document.createElement('div');
 			imgWrapper.classList.add(UIstringList.movieItemPoster);
@@ -138,14 +134,14 @@ const UICtrl = (function() {
 			return UIstringList;
 		},
 		moviesSortByName() {
-			Array.from(document.querySelectorAll(UISelectors.movieItemWrapper)).sort(function(a,b) {
+			Array.from(document.querySelectorAll(UISelectors.movieItem)).sort(function(a,b) {
 				return (a.dataset.title > b.dataset.title) -  (a.dataset.title < b.dataset.title)
 			}).forEach(function(elem, i) {
 				elem.style.order = i;
 			});
 		},
 		moviesSortByYear() {
-			Array.from(document.querySelectorAll(UISelectors.movieItemWrapper)).sort(function(a,b) {
+			Array.from(document.querySelectorAll(UISelectors.movieItem)).sort(function(a,b) {
 				return a.dataset.year - b.dataset.year
 			}).forEach(function(elem, i) {
 				elem.style.order = i;
@@ -211,11 +207,11 @@ const App = (function(MovieCtrl, UICtrl) {
 				.then(createMoviesList)
 				.then(UICtrl.moviesSearchLabelToggle)
 				.then(UICtrl.blurSearchInput)
-		// Clear input values
-				.then(UICtrl.clearMovieSortValue)
-				.then(UICtrl.clearMoviesSearchValue)
 		// Show error message
 				.catch(UICtrl.showErrorNothingFound);
+		// Clear input values
+		UICtrl.clearMovieSortValue();
+		UICtrl.clearMoviesSearchValue();
 		});
 
 		document.querySelector(UISelectors.sortByNameInput).addEventListener('change', UICtrl.moviesSortByName);
@@ -232,12 +228,12 @@ const App = (function(MovieCtrl, UICtrl) {
 
 
 	const createMoviesList = function(movies) {
-		let name = ['favorite-btn'];
+		let name = ['btn', 'favorite-btn-add'];
 		movies.forEach(function(movie){
 			UICtrl.createMovieItem(movie, UISelectors.movieList, name, Data.titleSize);
 	})}
 	const createFavoriteList = function(movies) {
-		let name = ['favorite-btn', 'remove-btn'];
+		let name = ['btn', 'favorite-btn-add', 'favorite-btn-remove'];
 		movies.forEach(function(movie){
 			UICtrl.createMovieItem(movie, UISelectors.favoritesList, name, Data.titleSize);
 	});
@@ -258,7 +254,7 @@ const App = (function(MovieCtrl, UICtrl) {
 		// Check if target contains remove class name
 			if(e.target.classList.contains(UIstringList.removeFromFavoriteBtn)) {
 		// Set movieTitle from data-title
-				movieTitle = e.target.closest(UISelectors.movieItemWrapper).dataset.title;
+				movieTitle = e.target.closest(UISelectors.movieItem).dataset.title;
 		// Go through favorite movies list
 				favoriteMovies.forEach( function(item, i) {
 		// Check if target title equal to favorite item title
@@ -267,11 +263,11 @@ const App = (function(MovieCtrl, UICtrl) {
 						favoriteMovies.splice(i, 1);
 					}
 		// Remove element from DOM
-					e.target.closest(UISelectors.movieItemWrapper).remove();
+					e.target.closest(UISelectors.movieItem).remove();
 				});
 			} else {
 		// If target don't contains remove class name
-				movieTitle = e.target.closest(UISelectors.movieItemWrapper).dataset.title;
+				movieTitle = e.target.closest(UISelectors.movieItem).dataset.title;
 		// Go through list of movies
 				moviesList.forEach( function(item) {
 		// Check if titles are equal
